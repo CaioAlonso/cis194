@@ -5,19 +5,29 @@ import Data.List.Split
 import Data.Maybe
 import Safe
 
+-- I chose not to reduce the variable names
+
 skips :: [a] -> [[a]]
 skips [] = []
-skips x = map (f x) [1..(length x)]
+skips x = map (genSkips x) [1..(length x)]
 
-f :: [a] -> Int -> [a]
-f l n = catMaybes (map (headMay . reverse) (takeWhile ((n ==) . length) (chunksOf n l)))
+genSkips :: [a] -> Int -> [a]
+genSkips list size = catMaybes $ map (headMay . reverse) $ takeWhile ((size ==) . length) $ chunksOf size list
 
 localMaxima :: [Integer] -> [Integer]
-localMaxima = catMaybes . map j . filter g . concat . map inits . tails
+localMaxima = catMaybes . map getMiddleElem . filter hasLocalMax . concat . map inits . tails
 
-g :: [Integer] -> Bool
-g (a:b:c:[])
+hasLocalMax :: [Integer] -> Bool
+hasLocalMax (a:b:c:[])
   | a < b && b > c = True
-g _ = False
+hasLocalMax _ = False
 
-j x = atMay x 1
+getMiddleElem trio = atMay trio 1
+
+histogram :: [Integer] -> String
+histogram a = (unlines $ reverse $ filter (/= "          ") $ map (histLine $ map (length . k) [0..9]) [0..(length a) - 1]) ++ "==========\n0123456789\n" 
+  where
+    k :: Integer -> [Int]
+    k x = elemIndices x a
+    histLine scores height = concat $ map (isAsterisk height) scores
+    isAsterisk h x = if x > h then "*" else " "
